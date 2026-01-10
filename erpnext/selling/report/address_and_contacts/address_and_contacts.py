@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 
 field_map = {
-	"Contact": ["name", "first_name", "last_name", "phone", "mobile_no", "email_id", "is_primary_contact"],
+	"Contact": ["name", "first_name", "last_name", "phone", "mobile_no", "email_id", "is_primary_contact", "designation"],
 	"Address": [
 		"name",
 		"address_line1",
