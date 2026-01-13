@@ -40,6 +40,7 @@ def get_columns():
 		{"label": _("Source"), "fieldname": "utm_source", "fieldtype": "Data", "width": 120},
 		{"label": _("Email"), "fieldname": "email_id", "fieldtype": "Data", "width": 120},
 		{"label": _("Mobile"), "fieldname": "mobile_no", "fieldtype": "Data", "width": 120},
+		{"label": _("Designation"), "fieldname": "designation", "fieldtype": "Data", "width": 120},
 		{"label": _("Phone"), "fieldname": "phone", "fieldtype": "Data", "width": 120},
 		{
 			"label": _("Owner"),
@@ -73,14 +74,16 @@ def get_columns():
 def get_data(filters):
 	lead = frappe.qb.DocType("Lead")
 	address = frappe.qb.DocType("Address")
-	dynamic_link = frappe.qb.DocType("Dynamic Link")
+	contact = frappe.qb.DocType("Contact")
+	dl_address = frappe.qb.DocType("Dynamic Link")
+	dl_contact = frappe.qb.DocType("Dynamic Link")
 
 	query = (
 		frappe.qb.from_(lead)
-		.left_join(dynamic_link)
-		.on((lead.name == dynamic_link.link_name) & (dynamic_link.parenttype == "Address"))
-		.left_join(address)
-		.on(address.name == dynamic_link.parent)
+		.left_join(dl_address).on((lead.name == dl_address.link_name) & (dl_address.parenttype == "Address"))
+		.left_join(address).on(address.name == dl_address.parent)
+		.left_join(dl_contact).on((lead.name == dl_contact.link_name) & (dl_contact.parenttype == "Contact"))
+		.left_join(contact).on(contact.name == dl_contact.parent)
 		.select(
 			lead.name,
 			lead.lead_name,
@@ -90,6 +93,7 @@ def get_data(filters):
 			lead.utm_source,
 			lead.email_id,
 			lead.mobile_no,
+			contact.designation,
 			lead.phone,
 			lead.owner,
 			lead.company,
