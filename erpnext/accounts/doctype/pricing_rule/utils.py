@@ -458,12 +458,12 @@ def get_qty_and_rate_for_mixed_conditions(doc, pr_doc, args):
 				continue
 
 			if pr_doc.mixed_conditions:
-				amt = args.get("qty") * args.get("price_list_rate")
-				if args.get("item_code") != row.get("item_code"):
-					amt = flt(row.get("qty")) * flt(row.get("price_list_rate") or args.get("rate"))
+				row_qty = flt(row.get("stock_qty")) or flt(row.get("qty"))
+    			row_rate = flt(row.get("price_list_rate")) or flt(row.get("rate")) or flt(args.get("price_list_rate"))
 
-				sum_qty += flt(row.get("stock_qty")) or flt(args.get("stock_qty")) or flt(args.get("qty"))
-				sum_amt += amt
+    			sum_qty += row_qty
+    			sum_amt += row_qty * row_rate
+
 
 		if pr_doc.is_cumulative:
 			data = get_qty_amount_data_for_cumulative(pr_doc, doc, items)
