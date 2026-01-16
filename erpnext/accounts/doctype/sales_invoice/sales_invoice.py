@@ -297,7 +297,7 @@ class SalesInvoice(SellingController):
 	def validate(self):
 		self.validate_auto_set_posting_time()
 		super().validate()
-
+		self.validate_single_credit_note()
 		self.is_subcontracted()
 
 		if not (self.is_pos or self.is_debit_note):
@@ -375,6 +375,59 @@ class SalesInvoice(SellingController):
 		self.validate_subcontracted_sales_order()
 		self.validate_scio_self_rm_qty()
 
+
+		def validate_single_credit_note(self):
+		"""
+		Prevent creating multiple Credit Notes for the same Sales Invoice / Sales Order.
+		"""
+
+
+		if not self.is_return:
+			return
+
+
+		if self.return_against:
+			existing = frappe.db.exists(
+				"Sales Invoice",
+				{
+					"is_return": 1,
+					"return_against": self.return_against,
+					"docstatus": 1,
+					"name": ["!=", self.name],
+				},
+			)
+
+			if existing:
+				frappe.throw(
+					_("A Credit Note already exists for this Sales Invoice: {0}").format(self.return_against)
+				)
+
+		
+		for item in self.items:
+			if item.sales_order:
+				existing = frappe.db.sql(
+					"""
+					SELECT si.name
+					FROM `tabSales Invoice` si
+					JOIN `tabSales Invoice Item` sii ON sii.parent = si.name
+					WHERE
+						si.is_return = 1
+						AND si.docstatus = 1
+						AND sii.sales_order = %s
+						AND si.name != %s
+					LIMIT 1
+					""",
+					(item.sales_order, self.name),
+					as_dict=1,
+				)
+
+				if existing:
+					frappe.throw(
+						_("A Credit Note already exists for Sales Order: {0}").format(item.sales_order)
+					)
+
+
+	
 	def validate_accounts(self):
 		self.validate_write_off_account()
 		self.validate_account_for_change_amount()
